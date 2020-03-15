@@ -32,7 +32,7 @@ object GridView {
 
   def reveal(coordinate: Coordinate): State[GridView, GameStatus] =
     State(view => {
-      val newRevealed: Seq[Coordinate] = view.revealedState.appended(coordinate)
+      val newRevealed: Seq[Coordinate] = view.revealedState :+ coordinate
       val newView = GridView(view.model, newRevealed)
       val status = if (newView.boardState.contains(MineCell)) Terminal else Continual
       (newView, status)

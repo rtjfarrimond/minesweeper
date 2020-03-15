@@ -1,18 +1,29 @@
 package minesweeper
 
-import minesweeper.grid.GridModel.Coordinate
-import minesweeper.grid.{GridModel, GridView}
 import cats.effect.IO
+import minesweeper.grid.GridView.{Continual, Terminal}
+import minesweeper.grid.{GridController, GridModel, GridView}
 
 object Main extends App {
 
-  val gridView = GridView(GridModel.from(2, 2, 3), Seq.empty)
-  val readLn = IO(scala.io.StdIn.readLine)
+  val gridView = GridView(GridModel.from(3, 3, 3), Seq.empty)
 
-  for {
-    _ <- IO(println(gridView))
-    n <- readLn
-    _ <- IO(println(n))
-    _ <- IO(println(GridView.reveal(Coordinate(1,1)).run(gridView).value._1))
-  } yield ()
+  val program = IO {
+    println(gridView)
+    step(gridView)
+  }
+
+  private def step(gridView: GridView): Unit = {
+    print("> ")
+    val coordinate = GridController.getMove()
+    println()
+    val (nextStateGridView, nextStateStatus) = GridView.reveal(coordinate).run(gridView).value
+    println(nextStateGridView)
+    nextStateStatus match {
+      case Continual => step(nextStateGridView)
+      case Terminal => println("BOOM!")
+    }
+  }
+
+  program.unsafeRunSync()
 }
