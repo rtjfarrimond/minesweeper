@@ -17,7 +17,8 @@ object Main extends App {
     print("> ")
     val coordinate = GridController.getMove()
     println()
-    val (nextStateGridView, nextStateStatus) = GridView.reveal(coordinate).run(gridView).value
+    val (nextStateGridView, nextStateStatus) =
+      GridView.reveal(coordinate).run(gridView).value
     println(nextStateGridView)
     nextStateStatus match {
       case Continual => step(nextStateGridView)
