@@ -1,6 +1,6 @@
 package minesweeper.grid
 
-import minesweeper.grid.GridModel.Coordinate
+import minesweeper.entity.Coordinate
 
 class GridModel(val x: Int, y: Int, val mineCoordinates: Seq[Coordinate]) {
   import GridModel._
@@ -8,9 +8,8 @@ class GridModel(val x: Int, y: Int, val mineCoordinates: Seq[Coordinate]) {
 }
 
 object GridModel {
-  final case class Coordinate(x: Int, y: Int)
 
-  def fillCoordinates(x: Int, y: Int): Seq[Coordinate] =
+  private def fillCoordinates(x: Int, y: Int): Seq[Coordinate] =
     for {
       xCoord <- 0 until x
       yCoord <- 0 until y

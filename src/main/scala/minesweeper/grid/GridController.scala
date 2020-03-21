@@ -1,39 +1,25 @@
 package minesweeper.grid
 
-import minesweeper.grid.GridModel.Coordinate
+import cats.data.Validated._
+import cats.implicits._
+import minesweeper.entity.Move
+import minesweeper.validator.UserInputValidator
 
-object GridController {
-  final case class UserInputParseError(message: String)
+object GridController extends UserInputValidator {
 
   @scala.annotation.tailrec
-  final def getMove(): Coordinate = {
-    parseUserInput(scala.io.StdIn.readLine) match {
+  final def getMove(): Move = {
+    parseUserInput(scala.io.StdIn.readLine).toEither match {
       case Left(error) => {
-        println(error.message)
+        println(error.map(_.message).mkString_("\n")) // TODO: Move this side effect out
         getMove
       }
       case Right(coordinate) => coordinate
     }
   }
 
-  private def parseUserInput(
-    input: String
-  ): Either[UserInputParseError, Coordinate] = {
-    try {
-      val split = input.split(',')
-      if (split.length != 2)
-        Left(UserInputParseError("Input did not match format 'x,y'"))
-      else {
-        val y = split(0).toInt
-        val x = split(1).toInt
-        Right(Coordinate(x, y))
-      }
-    } catch {
-      case _: NumberFormatException =>
-        Left(UserInputParseError("Could not parse x or y coordinate."))
-      case _: Throwable =>
-        Left(UserInputParseError("Unexpected parsing error occurred."))
-    }
+  def parseUserInput(input: String): ValidationResult[Move] = {
+    (validateMoveType(input), validateCoordinate(input)).mapN(Move)
   }
 
 }
