@@ -4,6 +4,10 @@ trait Cell extends Product with Serializable
 
 object Cell {
 
+  final case object FlagCell extends Cell {
+    override def toString: String = "F"
+  }
+
   final case object HiddenCell extends Cell {
     override def toString: String = " "
   }
