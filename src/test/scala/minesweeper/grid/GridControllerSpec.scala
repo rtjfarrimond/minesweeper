@@ -18,7 +18,6 @@ class GridControllerSpec extends FlatSpec with Matchers with EitherValues {
     val input = "12,"
     val validated = GridController.parseUserInput(input).toEither.left.value
     val errorList = validated.toNonEmptyList.toList
-    println(errorList.map(_.message).mkString("\n"))
     errorList.length shouldBe 2
     errorList should contain (InvalidMoveType)
     errorList should contain (CommaSplitError)

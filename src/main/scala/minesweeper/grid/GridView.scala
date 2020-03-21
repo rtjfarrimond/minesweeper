@@ -9,12 +9,28 @@ case class GridView(model: GridModel, revealedState: Set[Coordinate], flaggedSta
 
   private[grid] val boardState: Seq[Cell] = {
     model.coordinates.map {
-      case cell if flaggedState.contains(cell) => FlagCell
-      case cell if !revealedState.contains(cell) => HiddenCell
-      case cell if model.mineCoordinates.contains(cell) => MineCell
-      case _ => NumberCell(0) // TODO: Compute the value
+      case coordinate if flaggedState.contains(coordinate) => FlagCell
+      case coordinate if !revealedState.contains(coordinate) => HiddenCell
+      case coordinate if model.mineCoordinates.contains(coordinate) => MineCell
+      case coordinate => computeNumber(coordinate)
     }
   }
+
+  private def computeNumber(coordinate: Coordinate): NumberCell = {
+    val neighbours = getNeighbourCoordinates(coordinate)
+    val mineCount = neighbours.count(model.mineCoordinates.contains)
+    NumberCell(mineCount)
+  }
+
+  private def getNeighbourCoordinates(
+    coordinate: Coordinate
+  ): Seq[Coordinate] = {
+    val neighbours = for {
+      x <- (coordinate.x - 1) to (coordinate.x + 1)
+      y <- (coordinate.y - 1) to (coordinate.y + 1)
+    } yield Coordinate(x, y)
+      neighbours.filterNot(_ == coordinate)
+    }
 
   override def toString: String =
     boardState.grouped(model.x)

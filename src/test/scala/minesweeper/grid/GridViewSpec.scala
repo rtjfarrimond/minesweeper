@@ -8,12 +8,23 @@ import org.scalatest.{FlatSpec, Matchers}
 class GridViewSpec extends FlatSpec with Matchers {
 
   "reveal" should "reveal a NumberCell(0)" in {
-    val gridModel: GridModel = GridModel.from(1, 1, 0)
-    val gridView: GridView = GridView.initial(gridModel)
+    val gridModel = GridModel.from(1, 1, 0)
+    val gridView = GridView.initial(gridModel)
 
     val (updatedView, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
     updatedView.boardState.head shouldBe NumberCell(0)
     gameStatus shouldBe Continual // TODO: Make this a terminal state, since no moves left
+  }
+
+  it should "reveal a NumberCell with the number of adjacent mine cells" in {
+    val gridModel = GridModel.from(2, 2, 4)
+    val numberCellCoordinate = Coordinate(0, 0)
+    val mineCoordinates = gridModel.mineCoordinates.filterNot(_ == numberCellCoordinate)
+    val gridView = GridView.initial(gridModel.copy(mineCoordinates = mineCoordinates))
+
+    val (updatedView, gameStatus) = GridView.reveal(numberCellCoordinate).run(gridView).value
+    updatedView.boardState.head shouldBe NumberCell(3)
+    gameStatus shouldBe Continual
   }
 
   it  should "reveal a MineCell" in {
