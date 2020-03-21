@@ -1,22 +1,31 @@
 package minesweeper
 
 import cats.effect.IO
-import minesweeper.entity.MoveType._
+import cats.implicits._
 import minesweeper.entity.GameStatus.{Continual, TerminalLost, TerminalWon}
+import minesweeper.entity.Move
+import minesweeper.entity.MoveType._
 import minesweeper.grid._
+import minesweeper.validator.UserInputValidator
 
-object Main extends App {
+import scala.annotation.tailrec
 
-  val gridView = GridView.initial(GridModel.from(3, 3, 3))
+object Main extends App with UserInputValidator {
+
+  // TODO: Fix bug where flagging all of the cells will win even if they are not mine cells
+  val gridView = GridView.initial(GridModel.from(1, 1, 0))
 
   val program = IO {
     println(gridView)
-    step(gridView)
+    play(gridView)
   }
 
-  private def step(gridView: GridView): Unit = {
+  program.unsafeRunSync()
+
+  @tailrec
+  private def play(gridView: GridView): Unit = {
     print("> ")
-    val move = GridController.getMove()
+    val move = getMove()
     println()
     val (nextStateGridView, nextStateStatus) = move.moveType match {
       case RevealMove => GridView.reveal(move.coordinate).run(gridView).value
@@ -25,11 +34,22 @@ object Main extends App {
     }
     println(nextStateGridView)
     nextStateStatus match {
-      case Continual => step(nextStateGridView)
+      case Continual => play(nextStateGridView)
       case TerminalLost => println("BOOM! 💣")
       case TerminalWon => println("Congratulations, you found all the mines! 😎")
     }
   }
 
-  program.unsafeRunSync()
+  @tailrec
+  private def getMove(): Move = {
+    validate(scala.io.StdIn.readLine).toEither match {
+      case Left(errors) => {
+        println(errors.map(_.message).mkString_("\n"))
+        print("> ")
+        getMove()
+      }
+      case Right(move) => move
+    }
+  }
+
 }

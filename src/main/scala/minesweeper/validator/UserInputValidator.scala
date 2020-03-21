@@ -2,15 +2,18 @@ package minesweeper.validator
 
 import cats.data._
 import cats.implicits._
-import minesweeper.entity.Coordinate
-import minesweeper.entity.MoveType
+import minesweeper.entity.{Coordinate, Move, MoveType}
 
 trait UserInputValidator {
   import UserInputParseError._
 
   type ValidationResult[A] = ValidatedNec[UserInputParseError, A]
 
-  def validateMoveType(input: String): ValidationResult[MoveType] = {
+  def validate(input: String): ValidationResult[Move] = {
+    (validateMoveType(input), validateCoordinate(input)).mapN(Move)
+  }
+
+  private def validateMoveType(input: String): ValidationResult[MoveType] = {
     val moveTypeOption: Option[MoveType] = input.headOption
       .map(_.toLower)
       .flatMap(c => MoveType(c))
@@ -20,7 +23,7 @@ trait UserInputValidator {
     }
   }
 
-  def validateCoordinate(input: String): ValidationResult[Coordinate] = {
+  private def validateCoordinate(input: String): ValidationResult[Coordinate] = {
     try {
       val split = input.tail.split(',')
       if (split.length != 2)
