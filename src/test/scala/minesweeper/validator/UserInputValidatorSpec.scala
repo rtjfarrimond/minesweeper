@@ -1,6 +1,9 @@
 package minesweeper.validator
 
-import org.scalatest.{FlatSpec, Matchers, EitherValues}
+import minesweeper.entity.MoveType
+import minesweeper.entity.MoveType.{FlagMove, RevealMove}
+import minesweeper.validator.UserInputParseError.InvalidMoveType
+import org.scalatest.{Assertion, EitherValues, FlatSpec, Matchers}
 
 class UserInputValidatorSpec
   extends FlatSpec
@@ -8,59 +11,34 @@ class UserInputValidatorSpec
   with EitherValues
   with UserInputValidator {
 
-  "validateInputLength" should "return Right(input) given input of valid length" in {
-    val input = "1234" 
-    validateInputLength(input).right.value shouldBe input
+  "validateMoveType" should "return a flag move from lowercase f" in {
+    happyPath("f234", FlagMove)
   }
 
-  it should "return Left when is input is the empty String" in {
-    val input = ""
-    validateInputLength(input).left.value
+  it should "return a flag move from uppercase F" in {
+    happyPath("F234", FlagMove)
   }
 
-  it should "return Left when is input too short" in {
-    val input = "123"
-    validateInputLength(input).left.value
+  it should "return a reveal move from lowercase r" in {
+    happyPath("r234", RevealMove)
   }
 
-  it should "return Left when is input too long" in {
-    val input = "12345"
-    validateInputLength(input).left.value
+  it should "return a reveal move from uppercase R" in {
+    happyPath("R234", RevealMove)
   }
 
-  "validateMoveType" should "return Right(input) when lowercase f" in {
-    val input = "f123"
-    validateMoveType(input).right.value shouldBe input
+  it should "be invalid when first char does not map to a move type" in {
+    val validated = validateMoveType("1234")
+    validated.isValid shouldBe false
+    val errorList =
+      validated.toEither.left.value.toNonEmptyList.toList
+    errorList should contain (InvalidMoveType)
   }
 
-  it should "return Right(input) when uppercase F" in {
-    val input = "F123"
-    validateMoveType(input).right.value shouldBe input
-  }
-
-  "validateMoveType" should "return Right(input) when lowercase r" in {
-    val input = "r123"
-    validateMoveType(input).right.value shouldBe input
-  }
-
-  it should "return Right(input) when uppercase R" in {
-    val input = "R123"
-    validateMoveType(input).right.value shouldBe input
-  }
-
-  it should "return Left when input is empty String" in {
-    val input = ""
-    validateMoveType(input).left.value
-  }
-
-  "validateThirdCharacterIsComma" should "return Left when not a comma" in {
-    val input = "1234"
-    validateThirdCharacterIsComma(input).left.value
-  }
-
-  it should "return Left when input is the empty String" in {
-    val input = ""
-    validateThirdCharacterIsComma(input).left.value
+  private def happyPath(input: String, expected: MoveType): Assertion = {
+    val validated = validateMoveType(input)
+    validated.isValid shouldBe true
+    validated.toOption.get shouldBe expected
   }
 
 }

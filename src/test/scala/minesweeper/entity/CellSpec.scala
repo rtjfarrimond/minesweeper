@@ -3,7 +3,7 @@ package minesweeper.entity
 import minesweeper.entity.Cell.NumberCell
 import org.scalatest.{FlatSpec, Matchers}
 
-class CellTest extends FlatSpec with Matchers {
+class CellSpec extends FlatSpec with Matchers {
 
   "NumberCell.toString" should "be period when the value is 0" in {
     val numberCell = NumberCell(value = 0)

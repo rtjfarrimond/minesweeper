@@ -3,11 +3,11 @@ package minesweeper.grid
 import cats.data.State
 import minesweeper.entity.Cell
 import minesweeper.entity.Cell.{HiddenCell, MineCell, NumberCell}
-import minesweeper.grid.GridModel.Coordinate
+import minesweeper.entity.Coordinate
 
 case class GridView(model: GridModel, revealedState: Seq[Coordinate]) {
 
-  val boardState: Seq[Cell] = {
+  private val boardState: Seq[Cell] = {
     model.coordinates.map {
       case cell if !revealedState.contains(cell) => HiddenCell
       case cell if model.mineCoordinates.contains(cell) => MineCell
@@ -37,5 +37,5 @@ object GridView {
       val status = if (newView.boardState.contains(MineCell)) Terminal else Continual
       (newView, status)
     })
-
 }
+

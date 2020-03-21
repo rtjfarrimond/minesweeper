@@ -1,33 +1,68 @@
 package minesweeper.validator
 
+import cats.data._
+import cats.implicits._
+import minesweeper.entity.Coordinate
+import minesweeper.entity.MoveType
+
 trait UserInputValidator {
+  import UserInputParseError._
 
-  type ValidatedInput = Either[UserInputParseError, String]
+  type ValidationResult[A] = ValidatedNec[UserInputParseError, A]
 
-  final case class UserInputParseError(message: String)
-
-  private val ErrorMessage = "Input must match the format {F,R}x,y"
-
-  def validateInputLength(input: String): ValidatedInput = {
-    val validLength = 4
-    if (input.length == validLength) Right(input)
-    else Left(UserInputParseError(
-      f"Input $input was not $validLength long.\n$ErrorMessage")
-    )
-  }
-
-  def validateMoveType(input: String): ValidatedInput = {
-    val validMoveTypes = "fr"
-    input.headOption.map(_.toLower) match {
-      case Some(c) if validMoveTypes.contains(c) => Right(input)
-      case _ => Left(UserInputParseError("First character of input must be either F or R to indicate a Flag or a Reveal type move"))
+  def validateMoveType(input: String): ValidationResult[MoveType] = {
+    val moveTypeOption: Option[MoveType] = input.headOption
+      .map(_.toLower)
+      .flatMap(c => MoveType(c))
+    moveTypeOption match {
+      case Some(moveType) => moveType.validNec
+      case _ => InvalidMoveType.invalidNec
     }
   }
 
-  def validateThirdCharacterIsComma(input: String): ValidatedInput =
-    if (input == "" || input(2) != ',') Left(UserInputParseError(
-      "The x and y coordinates must be seperated by a comma"))
-    else Right(input)
+  def validateCoordinate(input: String): ValidationResult[Coordinate] = {
+    try {
+      val split = input.tail.split(',')
+      if (split.length != 2)
+        CommaSplitError.invalidNec
+      else {
+        val y = split(0).toInt
+        val x = split(1).toInt
+        Coordinate(x, y).validNec
+      }
+    } catch {
+      case _: NumberFormatException =>
+        CoordinateParseError.invalidNec
+      case _: Throwable =>
+        UnexpectedParsingError.invalidNec
+    }
+  }
+}
+
+sealed trait UserInputParseError extends Product with Serializable {
+  def message: String
+}
+
+object UserInputParseError {
+
+  final case object InvalidMoveType extends UserInputParseError {
+    override val message: String =
+      "First character of input must be either F or R to indicate a Flag or a Reveal type move."
+  }
+
+  final case object CommaSplitError extends UserInputParseError {
+    override val message: String =
+      "The x and y coordinates must be seperated by a comma."
+  }
+
+  final case object CoordinateParseError extends UserInputParseError {
+    override val message: String = "Could not parse x or y coordinate."
+  }
+
+  final case object UnexpectedParsingError extends UserInputParseError {
+    override val message: String =
+      "An unexpected error occurred whilst parsing user input."
+  }
 
 }
 

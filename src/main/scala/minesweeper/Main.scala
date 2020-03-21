@@ -1,6 +1,7 @@
 package minesweeper
 
 import cats.effect.IO
+import minesweeper.entity.MoveType.RevealMove
 import minesweeper.grid.GridView.{Continual, Terminal}
 import minesweeper.grid.{GridController, GridModel, GridView}
 
@@ -15,10 +16,12 @@ object Main extends App {
 
   private def step(gridView: GridView): Unit = {
     print("> ")
-    val coordinate = GridController.getMove()
+    val move = GridController.getMove()
     println()
-    val (nextStateGridView, nextStateStatus) =
-      GridView.reveal(coordinate).run(gridView).value
+    val (nextStateGridView, nextStateStatus) = move.moveType match {
+      case RevealMove => GridView.reveal(move.coordinate).run(gridView).value
+      case _ => (gridView, Continual) // TODO: Implement flagging
+    }
     println(nextStateGridView)
     nextStateStatus match {
       case Continual => step(nextStateGridView)
