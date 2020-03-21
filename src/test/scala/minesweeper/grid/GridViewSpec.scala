@@ -2,7 +2,7 @@ package minesweeper.grid
 
 import minesweeper.entity.Cell._
 import minesweeper.entity.Coordinate
-import minesweeper.grid.GridView.{Continual, Terminal}
+import minesweeper.entity.GameStatus.{Continual, TerminalLost, TerminalWon}
 import org.scalatest.{FlatSpec, Matchers}
 
 class GridViewSpec extends FlatSpec with Matchers {
@@ -13,7 +13,22 @@ class GridViewSpec extends FlatSpec with Matchers {
 
     val (updatedView, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
     updatedView.boardState.head shouldBe NumberCell(0)
-    gameStatus shouldBe Continual // TODO: Make this a terminal state, since no moves left
+  }
+
+  it should "produce a winning end state" in {
+    val gridModel = GridModel.from(1, 1, 0)
+    val gridView = GridView.initial(gridModel)
+
+    val (updatedView, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
+    gameStatus shouldBe TerminalWon
+  }
+
+  it should "produce a losing end state" in {
+    val gridModel = GridModel.from(1, 1, 1)
+    val gridView = GridView.initial(gridModel)
+
+    val (updatedView, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
+    gameStatus shouldBe TerminalLost
   }
 
   it should "reveal a NumberCell with the number of adjacent mine cells" in {
@@ -33,11 +48,11 @@ class GridViewSpec extends FlatSpec with Matchers {
 
     val (updatedView, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
     updatedView.boardState.head shouldBe MineCell
-    gameStatus shouldBe Terminal
+    gameStatus shouldBe TerminalLost
   }
 
   it should "reveal a MineCell from a flagged cell" in {
-    val gridModel: GridModel = GridModel.from(1, 1, 1)
+    val gridModel: GridModel = GridModel.from(3, 3, 9)
     val gridView: GridView = GridView.initial(gridModel)
 
     val (updatedView1, gameStatus1) = GridView.flag(Coordinate(0, 0)).run(gridView).value
@@ -46,11 +61,11 @@ class GridViewSpec extends FlatSpec with Matchers {
 
     val (updatedView2, gameStatus2) = GridView.reveal(Coordinate(0, 0)).run(updatedView1).value
     updatedView2.boardState.head shouldBe MineCell
-    gameStatus2 shouldBe Terminal
+    gameStatus2 shouldBe TerminalLost
   }
 
   it should "reveal a NumberCell(0) from a flagged cell" in {
-    val gridModel: GridModel = GridModel.from(1, 1, 0)
+    val gridModel: GridModel = GridModel.from(2, 2, 0)
     val gridView: GridView = GridView.initial(gridModel)
 
     val (updatedView1, gameStatus1) = GridView.flag(Coordinate(0, 0)).run(gridView).value
@@ -59,7 +74,7 @@ class GridViewSpec extends FlatSpec with Matchers {
 
     val (updatedView2, gameStatus2) = GridView.reveal(Coordinate(0, 0)).run(updatedView1).value
     updatedView2.boardState.head shouldBe NumberCell(0)
-    gameStatus2 shouldBe Continual // TODO: Make this a terminal state, since no moves left
+    gameStatus2 shouldBe Continual
   }
 
   "flag" should "place a FlagCell at the given coordinate" in new FlagContext {

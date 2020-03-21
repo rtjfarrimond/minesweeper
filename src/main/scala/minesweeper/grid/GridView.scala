@@ -1,9 +1,9 @@
 package minesweeper.grid
 
 import cats.data.State
-import minesweeper.entity.Cell
 import minesweeper.entity.Cell._
-import minesweeper.entity.Coordinate
+import minesweeper.entity.GameStatus.{Continual, TerminalLost, TerminalWon}
+import minesweeper.entity.{Cell, Coordinate, GameStatus}
 
 case class GridView(model: GridModel, revealedState: Set[Coordinate], flaggedState: Set[Coordinate]) {
 
@@ -43,24 +43,22 @@ case class GridView(model: GridModel, revealedState: Set[Coordinate], flaggedSta
 
 object GridView {
 
-  sealed trait GameStatus extends Product with Serializable
-  final case object Continual extends GameStatus
-  final case object Terminal extends GameStatus
-
   def initial(gridModel: GridModel): GridView =
     GridView(gridModel, Set.empty, Set.empty)
 
   def reveal(coordinate: Coordinate): State[GridView, GameStatus] =
     State(view => {
       val newView: GridView = revealCell(coordinate, view)
-      val status = if (newView.boardState.contains(MineCell)) Terminal else Continual
-      (newView, status)
+      (newView, getStatus(newView))
     })
 
   def flag(coordinate: Coordinate): State[GridView, GameStatus] =
     State(view => {
       if (view.revealedState contains coordinate) (view, Continual)
-      else (updateFlag(coordinate, view), Continual)
+      else {
+        val newView = updateFlag(coordinate, view)
+        (newView, getStatus(newView))
+      }
     })
 
   private def revealCell(coordinate: Coordinate, view: GridView): GridView = {
@@ -68,6 +66,12 @@ object GridView {
     val newFlaggedState = view.flaggedState excl coordinate
     val newView = view.copy(revealedState = newRevealedState, flaggedState = newFlaggedState)
     newView
+  }
+
+  private def getStatus(newView: GridView): GameStatus = {
+    if (newView.boardState.contains(MineCell)) TerminalLost
+    else if (!newView.boardState.contains(HiddenCell)) TerminalWon
+    else Continual
   }
 
   private def updateFlag(coordinate: Coordinate, view: GridView): GridView = {
