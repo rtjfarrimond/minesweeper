@@ -2,7 +2,7 @@ package minesweeper.grid
 
 import minesweeper.entity.Coordinate
 
-class GridModel(val x: Int, y: Int, val mineCoordinates: Seq[Coordinate]) {
+case class GridModel(x: Int, y: Int, mineCoordinates: Seq[Coordinate]) {
   import GridModel._
   val coordinates: Seq[Coordinate] = fillCoordinates(x, y)
 }
