@@ -11,7 +11,7 @@ class GridViewSpec extends FlatSpec with Matchers {
     val gridModel = GridModel.from(1, 1, 0)
     val gridView = GridView.initial(gridModel)
 
-    val (updatedView, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
+    val (updatedView, _) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
     updatedView.boardState.head shouldBe NumberCell(0)
   }
 
@@ -19,7 +19,7 @@ class GridViewSpec extends FlatSpec with Matchers {
     val gridModel = GridModel.from(1, 1, 0)
     val gridView = GridView.initial(gridModel)
 
-    val (updatedView, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
+    val (_, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
     gameStatus shouldBe TerminalWon
   }
 
@@ -27,7 +27,7 @@ class GridViewSpec extends FlatSpec with Matchers {
     val gridModel = GridModel.from(1, 1, 1)
     val gridView = GridView.initial(gridModel)
 
-    val (updatedView, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
+    val (_, gameStatus) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
     gameStatus shouldBe TerminalLost
   }
 
@@ -72,9 +72,16 @@ class GridViewSpec extends FlatSpec with Matchers {
     updatedView1.boardState.head shouldBe FlagCell
     gameStatus1 shouldBe Continual
 
-    val (updatedView2, gameStatus2) = GridView.reveal(Coordinate(0, 0)).run(updatedView1).value
+    val (updatedView2, _) = GridView.reveal(Coordinate(0, 0)).run(updatedView1).value
     updatedView2.boardState.head shouldBe NumberCell(0)
-    gameStatus2 shouldBe Continual
+  }
+
+  it should "reveal the whole board when there are no mines" in {
+    val gridModel: GridModel = GridModel.from(2, 2, 0)
+    val gridView: GridView = GridView.initial(gridModel)
+
+    val (updatedView1, _) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
+    updatedView1.boardState.forall(_ == NumberCell(0)) shouldBe true
   }
 
   "flag" should "place a FlagCell at the given coordinate" in new FlagContext {
@@ -98,15 +105,15 @@ class GridViewSpec extends FlatSpec with Matchers {
   }
 
   it should "do nothing if the cell is already revealed" in {
-    val gridModel: GridModel = GridModel.from(3, 3, 0)
+    val gridModel: GridModel = GridModel(3, 3, Seq(Coordinate(1,1)))
     val gridView: GridView = GridView.initial(gridModel)
 
     val (updatedView1, gameStatus1) = GridView.reveal(Coordinate(0, 0)).run(gridView).value
-    updatedView1.boardState.head shouldBe NumberCell(0)
+    val revealed = updatedView1.boardState.head
     gameStatus1 shouldBe Continual
 
     val (updatedView2, gameStatus2) = GridView.flag(Coordinate(0, 0)).run(updatedView1).value
-    updatedView2.boardState.head shouldBe NumberCell(0)
+    updatedView2.boardState.head shouldBe revealed
     gameStatus2 shouldBe Continual
   }
 
