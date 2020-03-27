@@ -68,9 +68,8 @@ class GridViewSpec extends FlatSpec with Matchers {
     val gridModel: GridModel = GridModel.from(2, 2, 0)
     val gridView: GridView = GridView.initial(gridModel)
 
-    val (updatedView1, gameStatus1) = GridView.flag(Coordinate(0, 0)).run(gridView).value
+    val (updatedView1, _) = GridView.flag(Coordinate(0, 0)).run(gridView).value
     updatedView1.boardState.head shouldBe FlagCell
-    gameStatus1 shouldBe Continual
 
     val (updatedView2, _) = GridView.reveal(Coordinate(0, 0)).run(updatedView1).value
     updatedView2.boardState.head shouldBe NumberCell(0)
@@ -115,6 +114,18 @@ class GridViewSpec extends FlatSpec with Matchers {
     val (updatedView2, gameStatus2) = GridView.flag(Coordinate(0, 0)).run(updatedView1).value
     updatedView2.boardState.head shouldBe revealed
     gameStatus2 shouldBe Continual
+  }
+
+  it should "not complete in a win state when the whole board is flagged" in new FlagContext {
+    val allCoordinates: Seq[Coordinate] = for {
+      x <- 0 to 3
+      y <- 0 to 3
+    } yield Coordinate(x, y)
+    val nearlyFullyFlaggedView: GridView = gridView.copy(flaggedState = allCoordinates.tail.toSet)
+
+    val (updatedView, gameStatus) = GridView.flag(allCoordinates.head).run(nearlyFullyFlaggedView).value
+    updatedView.boardState.forall(_ == FlagCell) shouldBe true
+    gameStatus shouldBe Continual
   }
 
   trait FlagContext {

@@ -86,7 +86,7 @@ object GridView {
 
   private def getStatus(newView: GridView): GameStatus = {
     if (newView.boardState.contains(MineCell)) TerminalLost
-    else if (!newView.boardState.contains(HiddenCell)) TerminalWon
+    else if (newView.model.mineCoordinates.forall(newView.revealedState.contains)) TerminalWon
     else Continual
   }
 

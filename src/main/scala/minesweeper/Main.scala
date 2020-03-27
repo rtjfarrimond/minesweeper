@@ -12,8 +12,7 @@ import scala.annotation.tailrec
 
 object Main extends App with UserInputValidator {
 
-  // TODO: Fix bug where flagging all of the cells will win even if they are not mine cells
-  val gridView = GridView.initial(GridModel.from(14, 14, 40))
+  val gridView = GridView.initial(GridModel.from(9, 9, 15))
 
   val program = IO {
     println(gridView)
